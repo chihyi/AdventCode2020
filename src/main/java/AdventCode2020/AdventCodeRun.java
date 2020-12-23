@@ -6,8 +6,8 @@ import java.io.IOException;
 public class AdventCodeRun {
     public static void main(String[] args) throws IOException {
 
-        day17 instance_day17 = new day17();
-        instance_day17.solve();
+        day19 instance_day19 = new day19();
+        instance_day19.solve();
 /*        day02 instance_day02 = new day02();
         instance_day02.solve();
 */
