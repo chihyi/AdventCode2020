@@ -13,28 +13,29 @@ import java.util.List;
 public class day19 {
 
     private HashMap<Integer, Rule> hashMap_rules = new HashMap<>();
+
     public void solve() throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/Inputs/day19_test.txt"));
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/Inputs/day19.txt"));
         String line;
-        while (!(line=bufferedReader.readLine()).equals("")){
+        while (!(line = bufferedReader.readLine()).equals("")) {
             System.out.println(line);
             String[] split = line.split(": ");
             int rule_number = Integer.valueOf(split[0]);
             Rule rule = new Rule();
-            if(split[1].contains("\"")){
+            if (split[1].contains("\"")) {
                 rule.type = 1; // literal
                 rule.literal = split[1].charAt(1);
-            }else{
+            } else {
                 String[] split_rules = split[1].split(" \\| ");
-                if(split_rules.length <= 1){
+                if (split_rules.length <= 1) {
                     rule.type = 2; // and
-                }else{
+                } else {
                     rule.type = 3;
                 }
-                for(int i=0;i<split_rules.length;i++){
+                for (int i = 0; i < split_rules.length; i++) {
                     String[] split_rule = split_rules[i].split(" ");
                     ArrayList<Integer> rules_and = new ArrayList<>();
-                    for(int j=0;j<split_rule.length;j++){
+                    for (int j = 0; j < split_rule.length; j++) {
                         rules_and.add(Integer.valueOf(split_rule[j]));
                     }
                     rule.rule.add(rules_and);
@@ -43,103 +44,77 @@ public class day19 {
             hashMap_rules.put(rule_number, rule);
         }
 
-        // change rules;
-        /*Rule rule_8 = hashMap_rules.get(8);
-        ArrayList<Integer> new_elements_8 = new ArrayList<>();
-        new_elements_8.add(42);
-        new_elements_8.add(8);
-        rule_8.rule.add(new_elements_8);
-        System.out.println(hashMap_rules.get(8).rule);
-
-        Rule rule_11 = hashMap_rules.get(11);
-        ArrayList<Integer> new_elements_11 = new ArrayList<>();
-        new_elements_11.add(42);
-        new_elements_11.add(11);
-        new_elements_11.add(31);
-        rule_11.rule.add(new_elements_11);
-        System.out.println(hashMap_rules.get(11).rule);*/
-
         int sum_match = 0;
-        while ((line=bufferedReader.readLine())!=null){
+        while ((line = bufferedReader.readLine()) != null) {
             System.out.println(line);
-            Result_match result_match = match(line, 0);
-            System.out.println("line_length:"+line.length());
-            System.out.println("n_digit_used:"+result_match.n_digit_used);
-            result_match.match = (result_match.n_digit_used == line.length()) && result_match.match;
-            System.out.println(result_match.match);
-            if(result_match.match == true){
+            ArrayList<Integer> rule_sequence = new ArrayList<>();
+            rule_sequence.add(0);
+            boolean result_match = match(line, rule_sequence);
+            System.out.println(result_match);
+            if (result_match == true) {
                 sum_match++;
             }
         }
         System.out.println(sum_match);
     }
 
-    private Result_match match(String input_string, int rule_number){
-        Result_match result_match;
-
-        Rule rule = hashMap_rules.get(rule_number);
-
-        if(rule.type == 1){
-            result_match = match_lit(input_string, rule.literal);
-        }else if(rule.type == 2){
-            result_match = match_and(input_string, rule.rule.get(0));
-        }else{
-            result_match = match_or(input_string, rule.rule);
-        }
-
-        System.out.println("match:" + result_match.match);
-        return result_match;
+    static int q() {
+        return 12;
     }
 
-    private Result_match match_and(String input_string, ArrayList<Integer> rules){
-        Result_match result_match = new Result_match();
-        for(int i=0;i<rules.size();i++){
-            Result_match result = match(input_string.substring(result_match.n_digit_used), rules.get(i));
-            if(result.match == false){
-                result_match.match = false;
-                System.out.println("match_and:" + result_match.match);
-                return result_match;
+    private boolean match(String input_string, ArrayList<Integer> rule_sequence) {
+
+        boolean result = false;
+        if (input_string.isEmpty() && rule_sequence.size() == 0) {
+            return true;
+        } else if (input_string.isEmpty() ^ rule_sequence.size() == 0) {
+            return false;
+        }
+
+        Rule rule = hashMap_rules.get(rule_sequence.get(0));
+
+        if (rule.type == 1) {
+            ArrayList<Integer> rule_sequence_new = new ArrayList<>(rule_sequence);
+            if (rule.literal == input_string.charAt(0)) {
+                rule_sequence_new.remove(0);
+                //System.out.println("literal: " + input_string.substring(1) + ", " +rule_sequence_new.toString());
+                return match(input_string.substring(1), rule_sequence_new);
+            } else {
+                return false;
             }
-            result_match.n_digit_used += result.n_digit_used;
-        }
-        result_match.match = true;
-        System.out.println("match_and:" + result_match.match);
-        return result_match;
-    }
-
-    private Result_match match_lit(String input_string, char literal){
-        Result_match result_match = new Result_match();
-        if(input_string.charAt(0) == literal){
-            result_match.match = true;
-            result_match.n_digit_used = 1;
-        }else {
-            result_match.match = false;
-        }
-        System.out.println("match_lit:" + result_match.match);
-        return result_match;
-    }
-
-    private Result_match match_or(String input_string, ArrayList<ArrayList<Integer>> rules){
-        Result_match result_match = new Result_match();
-        for(int i=0;i<rules.size();i++){
-            Result_match result = match_and(input_string, rules.get(i));
-            if(result.match == true){
-                result_match.match = true;
-                result_match.n_digit_used += result.n_digit_used;
-                return  result_match;
+        } else if (rule.type == 2) {
+            ArrayList<Integer> rule_sequence_new = new ArrayList<>(rule_sequence);
+            rule_sequence_new.remove(0);
+            int index_add = 0;
+            for (int j = 0; j < rule.rule.get(0).size(); j++) {
+                rule_sequence_new.add(index_add, rule.rule.get(0).get(j));
+                index_add++;
             }
+            //System.out.println("and: " + input_string + ", " +rule_sequence_new.toString());
+            return match(input_string, rule_sequence_new);
+        } else {
+            for (int i = 0; i < rule.rule.size(); i++) {
+                ArrayList<Integer> rule_sequence_new = new ArrayList<>(rule_sequence);
+                rule_sequence_new.remove(0);
+                int index_add = 0;
+                for (int j = 0; j < rule.rule.get(i).size(); j++) {
+                    rule_sequence_new.add(index_add, rule.rule.get(i).get(j));
+                    index_add++;
+                }
+                //System.out.println("or: " + input_string + ", " + rule_sequence_new.toString());
+                result = match(input_string, rule_sequence_new);
+                if (result == true) {
+                    return true;
+                }
+            }
+            return false;
         }
-        System.out.println("match_or:" + result_match.match);
-        return result_match;
-    }
-
-    private class Result_match{
-        public boolean match = false;
-        public int n_digit_used = 0;
     }
 
 
-    private class Rule{
+
+
+    private class Rule {
         public int type; // 1:literal, 2:and, 3:or
         public ArrayList<ArrayList<Integer>> rule = new ArrayList<>();
         public char literal;
